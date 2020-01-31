@@ -34,7 +34,11 @@ vignettes/*.pdf
 .Rproj.user
 
 *states/
+
 *output/
+
+# Data for fact sheets  
+data/
 
 *.db
 
