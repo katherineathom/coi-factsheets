@@ -22,23 +22,73 @@ options(knitr.kable.NA = "")
 options(kableExtra.latex.load_packages = FALSE)
 
 library(tidyverse)
+library(tidyr)
 library(knitr)
 library(kableExtra)
 library(urbnthemes)
 library(here)
+library(scales)
 library(readxl)
 
 set_urbn_defaults(style = "print")
 
-filepath <- here("/data/factsheet_who are-support_data_states_201617_varnames.xlsx")
+filepath <- here("/data/factsheet_who are-support_data_states_201718_varnames.xlsx")
+
+topercent <- function(x) {
+  if(abs(x) > 0.01) {
+    round((x*100),0)
+  } else{
+    round((x*100),1)
+  }
+} 
+
 states_subset <- read_excel(filepath) %>%
-  filter(StateName == params$state) 
+  filter(StateName == params$state) %>%
+  rename_at(vars(contains("1718")),.funs=funs(sub("_1718","",.))) %>%
+  
+  # prepare overall cOI population number - rounded thousand or numeric + "million" text
+  mutate(text_1_popcount = case_when(total_popcount_coi < 1000000 ~ formatC(total_popcount_coi,format="f",digits=0,big.mark=","),
+                                     TRUE ~ paste(round((total_popcount_coi/1000000),1),"million"))) %>%
+  
+  # convert decimals to be communicated as percentages - no decimals except under 1% 
+  mutate_at(vars(starts_with("pct"),starts_with("share")),topercent) %>%
+  
+  # prepare strings that'll change
+  mutate(text_2_citizens = case_when(share_uscitizen_coi >= 85 ~ "Almost all",
+                                     share_uscitizen_coi < 85 & share_uscitizen_coi >= 50 ~ "Most",
+                                     share_uscitizen_coi < 50 ~ "Many",
+                                     TRUE ~ NA_character_),
+         
+         text_3_citizens = case_when(share_prtnatcit_coi >= 50 ~ "most",
+                                     share_prtnatcit_coi < 50 ~ "many",
+                                     TRUE ~ NA_character_),
+         
+         temp_working_diff = share_workingfam_coi - share_workingfam_nat,
+         
+         text_4_employment = case_when(abs(temp_working_diff) < 3 ~ "similar for children of immigrants and",
+                                       temp_working_diff < 6 & temp_working_diff >=3 ~ "slightly higher for children of immigrants than",
+                                       temp_working_diff >= 6 ~ "higher for children of immigrants than",
+                                       temp_working_diff > -6 & temp_working_diff <= -3 ~ "slightly lower for children of immigrants than",
+                                       temp_working_diff <= -6 ~ "lower for children of immigrants than"), 
+         
+         text_5_lowinc = case_when(temp_working_diff <= -3 ~ "Around",
+                                   temp_working_diff > -3 ~ "Yet,",
+                                   TRUE ~ NA_character_),
+         
+         text_6_race = case_when((share_asian_coi >= 75 | share_black_coi >= 75 | share_hispanic_coi >= 75 | share_white_coi >= 75 ~ " fairly "),
+                                 TRUE ~ " ")) %>%
+  select(-starts_with("temp"))
 
-#%>%
- # mutate_at(starts_with(c("share","pct")),) ## finish this to multiply by 100 and maybe round 
-## 
 
+#race_subset <- states_subset %>%
+ # select(c("StateName","share_asian_coi","share_black_coi","share_hispanic_coi","share_white_coi","share_othmult_coi",
+  #         starts_with("pct_grow"))) %>%
+  #pivot_longer(-c("StateName",starts_with("pct")), 
+  #             cols = starts_with("share"),
+  #             names_to = "race",
+  #             values_to = "share")
 
+  
 
 ```
 
@@ -47,21 +97,21 @@ states_subset <- read_excel(filepath) %>%
 \urbntitle{The Future of `r params$state` Depends on Children of Immigrants}
 \urbnauthors{Cary Lou, Erica Greenberg, and Kate Thomas}
 
-Children of immigrants are an important part of this country's future. Around 4.3 million children in `r params$state` had at least one immigrant parent in 2017-18. Nationwide, over 18 million children&mdash;a quarter of all people ages 17 and younger&mdash;had at least one immigrant parent. 
+Children of immigrants are an important part of this country's future. Around `r states_subset$text_1_popcount` children in `r params$state` had at least one immigrant parent in 2017-18. Nationwide, over 18 million children&mdash;a quarter of all people ages 17 and younger&mdash;had at least one immigrant parent. 
 
 These children and their families are the \href{https://www.pewresearch.org/fact-tank/2017/03/08/immigration-projected-to-drive-growth-in-u-s-working-age-population-through-at-least-2035/}{next generation of workers and taxpayers}. Ensuring that they have access to early education and other public supports so they can reach their full potential is \href{https://www.urban.org/research/publication/preparing-future-workforce-early-care-and-education-participation-among-children-immigrants}{essential to the future} of the US and `r params$state`. 
 
-\urbnheadingone{Who Are Children of Immigrants}
+\urbnheadingone{Who Are Children of Immigrants?}
 
-**Most are US citizens, and many have families with deep US ties (figure 1).** Almost all children of immigrants are citizens (`r round(states_subset$share_uscitizen_coi_1617*100,0)` percent in `r params$state` and over 90 percent nationwide); most have at least one citizen parent. Additionally, 83 percent of children of immigrants statewide have parents who have been in the US for 10 years or longer. 
+**Most are US citizens, and many have families with deep US ties (figure 1).** `r states_subset$text_2_citizens` children of immigrants are citizens (`r states_subset$share_uscitizen_coi` percent in `r params$state` and over 83 percent nationwide); `r states_subset$text_3_citizens` have at least one citizen parent. Additionally, `r states_subset$share_prtUS10plusyrs_coi` percent of children of immigrants statewide have parents who have been in the US for 10 years or longer. 
 
 Nevertheless, immigration enforcement efforts and other federal immigration initiatives can affect \href{https://www.urban.org/research/publication/implications-immigration-enforcement-activities-well-being-children-immigrant-families-review-literature}{family stability} and \href{https://www.urban.org/features/understanding-consequences-current-immigration-policy}{overall well-being}, even for people not at risk.
 
-**Their family employment is high, yet their family incomes are still relatively low (figure 2).** In `r params$state`, the shares of children with family members \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{working substantial hours} (1,000+ hours each on average or 1,800+ hours total) are similar for children of immigrants and children of US-born parents. 
+**Their family employment is high, yet their family incomes are still relatively low (figure 2).** In `r params$state`, the shares of children with family members \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{working substantial hours} (1,000+ hours each on average or 1,800+ hours total) are `r states_subset$text_4_employment` children of US-born parents. 
 
-Yet, 49 percent of children of immigrants lived in families with \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{low incomes} (below 200 percent of the federal poverty level) in 2017-18, compared with 31 percent of children with only US-born parents. 
+`r states_subset$text_5_lowinc` `r states_subset$share_below200povr_coi` percent of children of immigrants lived in families with \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{low incomes} (below 200 percent of the federal poverty level) in 2017-18, compared with `r states_subset$share_below200povr_nat` percent of children with only US-born parents. 
 
-**They come from diverse backgrounds.** Around 64 percent of children of immigrants in `r params$state` are Hispanic, followed by Asian (21 percent&mdash;the fastest growing group), white (10 percent), and Black (1.4 percent); 4 percent identify as another race or are multiracial. 
+**They come from`r states_subset$text_6_race`diverse backgrounds.** Around `r states_subset$share_hispanic_coi` percent of children of immigrants in `r params$state` are Hispanic, followed by Asian (`r states_subset$share_asian_coi` percent&mdash;the fastest growing group), white (`r states_subset$share_white_coi` percent), and Black (`r states_subset$share_black_coi` percent); `r states_subset$share_othmult_coi` percent identify as another race or are multiracial. 
 
 \newpage{}
 \newgeometry{left=1in,right=1in,top=1in,bottom=1.5in}
@@ -72,15 +122,15 @@ Children need \href{https://www.urban.org/research/publication/earnings-dynamics
 
 **Safe and stable housing** is the foundation for children's development, but high housing costs can put pressure on family budgets. 
 
-In `r params$state`, around 28 percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with 22 percent of children with only US born parents (figure 3).\footnote{Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
+In `r params$state`, around `r states_subset$share_hcb_max_coi` percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with `r states_subset$share_hcb_max_nat` percent of children with only US born parents (figure 3).\footnote{Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
 
 Government programs \href{https://www.urban.org/urban-wire/using-housing-policy-tools-build-ladders-middle-class}{can help} create and preserve more affordable housing and provide ladders to opportunity. But substantial shares of immigrant families have recently reported avoiding \href{https://www.urban.org/research/publication/one-seven-adults-immigrant-families-reported-avoiding-public-benefit-programs-2018}{public programs} or \href{https://www.urban.org/research/publication/adults-immigrant-families-report-avoiding-routine-activities-because-immigration-concerns}{other activities} because of immigration concerns. 
 
-**Health insurance** can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r params$state`, the share of children without health insurance has fallen in recent years (figure 4), and the difference in coverage rates between children of immigrants and others has narrowed. In 2016-17, these trends leveled off, and children of immigrants were still more likely to be uninsured. 
+**Health insurance** can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r params$state`, the share of children without health insurance has fallen in recent years (figure 4), and the difference in coverage rates between children of immigrants and others has narrowed. In 2016-17, the difference increased from the prior year.
 
-Public insurance programs like medicaid are \href{https://www.urban.org/research/publication/improvements-uninsurance-and-medicaidchip-participation-among-children-and-parents-stalled-2017}{one piece of the puzzle} in covering children and families. But immigrant families have \href{https://www.urban.org/research/publication/safety-net-access-context-public-charge-rule}{reported being afraid of} participating in a range of health and nutrition programs, despite their \href{https://www.urban.org/research/publication/proposed-snap-work-requirements-and-childrens-food-security}{demonstrated benefits}, because of the current policy climate. 
+Public insurance programs like Medicaid are \href{https://www.urban.org/research/publication/improvements-uninsurance-and-medicaidchip-participation-among-children-and-parents-stalled-2017}{one piece of the puzzle} in covering children and families. But immigrant families have \href{https://www.urban.org/research/publication/safety-net-access-context-public-charge-rule}{reported being afraid of} participating in a range of health and nutrition programs, despite their \href{https://www.urban.org/research/publication/proposed-snap-work-requirements-and-childrens-food-security}{demonstrated benefits}, because of the current policy climate. 
 
-High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r params$state`, around 36 percent of children of immigrants ages 3-5 were enrolled in preschool in 2017-18, compared with 40 percent of 3- to 5-year-olds with only US-born parents. 
+High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r params$state`, around `r states_subset$share_preschool_of3to5_coi` percent of children of immigrants ages 3-5 were enrolled in preschool in 2017-18, compared with `r states_subset$share_preschool_of3to5_nat` percent of 3- to 5-year-olds with only US-born parents. 
 
 **Children of immigrants are and will continue to be part of the state's future and the nation's. Understanding their diversity and supporting immigrant families can help ensure our collective prosperity.**
 
