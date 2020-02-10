@@ -29,6 +29,7 @@ library(urbnthemes)
 library(here)
 library(scales)
 library(readxl)
+library(stringr)
 
 set_urbn_defaults(style = "print")
 
@@ -44,7 +45,7 @@ topercent <- function(x) {
 
 states_subset <- read_excel(filepath) %>%
   filter(StateName == params$state) %>%
-  rename_at(vars(contains("1718")),.funs=funs(sub("_1718","",.))) %>%
+  rename_at(vars(contains("1718")),~sub("_1718","",.)) %>%
   
   # prepare overall cOI population number - rounded thousand or numeric + "million" text
   mutate(text_1_popcount = case_when(total_popcount_coi < 1000000 ~ formatC(total_popcount_coi,format="f",digits=0,big.mark=","),
@@ -79,17 +80,85 @@ states_subset <- read_excel(filepath) %>%
                                  TRUE ~ " ")) %>%
   select(-starts_with("temp"))
 
+race_subset <- states_subset %>%
+ select(c("StateName","share_asian_coi","share_black_coi","share_hispanic_coi","share_white_coi","share_othmult_coi",
+          starts_with("pct_grow"),race_COIpop_growmost_0506to1718)) %>%
+  pivot_longer(cols = starts_with("share"),
+              names_to = "race",
+              values_to = "share") %>%
+  # handling oth/mult race separately since it doesn't move around like the other racial/ethnic groupings
+  filter(race != "share_othmult_coi") %>%
+  mutate(race = case_when(str_detect(race,"asian") ~ "Asian",
+                          str_detect(race,"black") ~ "Black",
+                          str_detect(race,"hispanic") ~ "Hispanic",
+                          str_detect(race,"white") ~ "white")) %>%
+  mutate(pct_grow = case_when(race == "Asian" ~ pct_grow_asian_coi,
+                              race == "Black" ~ pct_grow_black_coi,
+                              race == "Hispanic" ~ pct_grow_hispanic_coi,
+                              race == "white" ~ pct_grow_white_coi)) %>%
+  select(-starts_with("pct_grow_")) %>%
+  rename(fastest = race_COIpop_growmost_0506to1718) %>%
+  mutate(fastest = ifelse(tolower(race) == fastest,1,0)) %>%
+  select(-starts_with("pct_grow_"))  %>%
+  arrange(-share) %>%
+  mutate(rank = 1:nrow(.)) 
 
-#race_subset <- states_subset %>%
- # select(c("StateName","share_asian_coi","share_black_coi","share_hispanic_coi","share_white_coi","share_othmult_coi",
-  #         starts_with("pct_grow"))) %>%
-  #pivot_longer(-c("StateName",starts_with("pct")), 
-  #             cols = starts_with("share"),
-  #             names_to = "race",
-  #             values_to = "share")
+  # Ordered vectors of percents, labels for race groups, and text strings (mostly empty) to insert in race paragraph 
+  race_percents <- race_subset$share
+  race_labels <- race_subset$race
+  race_growth <- ifelse(race_subset$fastest == 1, "&mdash;the fastest growing group","")
+  
+  
+  ## Reshaping data for figures 
+  fig_data <- states_subset %>% 
+    select(c("StateName",
+             starts_with("share_workingfam"),
+             starts_with("share_above200povr"),
+             starts_with("share_100to200povr"),
+             starts_with("share_below100povr"))) %>%
+    pivot_longer(-StateName) %>%
+    separate(name,c("share","var","group")) %>%
+    select(-share) %>%
+    pivot_wider(names_from="var",
+                values_from="value")
+  
+## Creating Figure 1
+  
+## Creating Figure 2 
+  
+# make sure I get the changes that cary slacked me for this one 
+  
+  fig2 <- fig_data %>% 
+    ggplot(mapping = aes(x=factor(group),y = workingfam,fill=factor(group))) + 
+    geom_col()+
+    coord_flip() 
+  
+  # Fix colors
+  # fix text 
+  # Make them go together
+  # Legends
+  # Title and figure label
+  # Other ones 
 
   
-
+    
+  mtcars %>%
+  count(cyl) %>%
+  ggplot(mapping = aes(x = factor(cyl), y = n)) +
+  geom_col() +
+  geom_text(mapping = aes(label = n), hjust = -1) +  
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) +
+  labs(x = "Cylinders",
+       y = NULL) +  
+  coord_flip() +
+  remove_axis(axis = "x", flip = TRUE)
+    
+  
+## Creating Figure 3 
+  
+  
+## Creating Figure 4 
+  
 ```
 
 \urbnlogo{}
@@ -111,7 +180,7 @@ Nevertheless, immigration enforcement efforts and other federal immigration init
 
 `r states_subset$text_5_lowinc` `r states_subset$share_below200povr_coi` percent of children of immigrants lived in families with \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{low incomes} (below 200 percent of the federal poverty level) in 2017-18, compared with `r states_subset$share_below200povr_nat` percent of children with only US-born parents. 
 
-**They come from`r states_subset$text_6_race`diverse backgrounds.** Around `r states_subset$share_hispanic_coi` percent of children of immigrants in `r params$state` are Hispanic, followed by Asian (`r states_subset$share_asian_coi` percent&mdash;the fastest growing group), white (`r states_subset$share_white_coi` percent), and Black (`r states_subset$share_black_coi` percent); `r states_subset$share_othmult_coi` percent identify as another race or are multiracial. 
+**They come from`r states_subset$text_6_race`diverse backgrounds.**   Around `r race_percents[1]` percent of children of immigrants in `r params$state` are `r race_labels[1]``r race_growth[1]`, followed by `r race_labels[2]` (`r race_percents[2]` percent`r race_growth[2]`), `r race_labels[3]` (`r race_percents[3]` percent`r race_growth[3]`), and `r race_labels[4]` (`r race_percents[4]` percent`r race_growth[4]`); `r states_subset$share_othmult_coi` percent identify as another race or are multiracial. 
 
 \newpage{}
 \newgeometry{left=1in,right=1in,top=1in,bottom=1.5in}
