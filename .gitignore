@@ -37,6 +37,8 @@ vignettes/*.pdf
 
 *output/
 
+*.pdf
+
 # Data for fact sheets  
 data/
 
