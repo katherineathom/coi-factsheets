@@ -42,6 +42,9 @@ vignettes/*.pdf
 # Data for fact sheets  
 data/
 
+# Figures - Image files
+figures/
+
 *.db
 
 # Microsoft word example factsheets

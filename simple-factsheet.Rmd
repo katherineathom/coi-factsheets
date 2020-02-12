@@ -10,6 +10,8 @@ urlcolor: #169d62
 params:
   state: "California"
   state_abbrev: "CA"
+editor_options: 
+  chunk_output_type: console
 ---
 
 \raggedright
@@ -23,7 +25,6 @@ options(knitr.kable.NA = "")
 options(kableExtra.latex.load_packages = FALSE)
 
 library(tidyverse)
-library(tidyr)
 library(knitr)
 library(kableExtra)
 library(urbnthemes)
@@ -31,9 +32,12 @@ library(here)
 library(scales)
 library(readxl)
 library(stringr)
+library(ggrepel)
 
 set_urbn_defaults(style = "print")
+```
 
+```{r plots, include=FALSE, results="hide"}
 filepath <- here("/data/factsheet_who are-support_data_states_201718_varnames.xlsx")
 
 topercent <- function(x) {
@@ -121,8 +125,7 @@ race_subset <- states_subset %>%
   # Ordered vectors of percents, labels for race groups, and text strings (mostly empty) to insert in race paragraph 
   race_percents <- race_subset$share
   race_labels <- race_subset$race
-  race_growth <- ifelse(race_subset$fastest == 1, "-the fastest growing group","")
-  
+  race_growth <- ifelse(race_subset$fastest == 1, "—the fastest growing group","")
 
   urban_blue <- urbnthemes::palette_urbn_diverging[7]
   urban_black <- urbnthemes::palette_urbn$categorical[[3]][3]
@@ -145,29 +148,32 @@ race_subset <- states_subset %>%
            var = rep("citizenship",times=nrow(.))) %>%
     ggplot() + 
     geom_col(mapping=aes(x=var,y=share,fill=par_status),
-             width=0.2)  +
+             width=0.6)  +
     scale_fill_manual(labels=c("Parental birthplace unknown",
                                  "Noncitizens with immigrant parent(s)",
                                  "US citizens with immigrant parent(s)",
                                  "Only US-born parents"),
                       values=c(urban_grey, urban_lightblue, urban_blue, urban_black),
                       guide = guide_legend(reverse=TRUE)) +
-    theme(axis.text=element_blank(),
-          axis.title=element_blank(),
-          axis.ticks=element_blank(),
-          axis.ticks.length=unit(0,"pt"),
-          panel.grid.major=element_blank(),
-          panel.grid.minor=element_blank(),
-          axis.line=element_blank(),
-          legend.direction="vertical",
-          legend.position=c(0.5,0.75),
-          plot.margin=grid::unit(c(0,0,0,0),"mm"),
-          plot.background=element_blank()) +
-    geom_text(aes(x=var,y=share,label=paste0(share,"%")),
+    theme(axis.text = element_blank(),
+          axis.title = element_blank(),
+          axis.line = element_blank(),
+          legend.direction = "vertical",
+          plot.background = element_blank()) +
+    geom_text_repel(aes(x = var,y = share,label=paste0(share,"%")),
               color="white")+
     remove_axis() +
     coord_flip() 
-ggsave(here("/figures/figure1.jpeg"), width=3.5,height=2,unit="in")
+  
+fig1 <- urbn_plot(get_legend(fig1),
+                  remove_legend(fig1),
+                  heights = c(0.6, 0.4))  
+  
+ggsave(here("/figures/figure1.jpeg"), 
+       plot = fig1, 
+       width = 3.5,
+       height = 1.5,
+       unit = "in")
   
 ## Creating Figure 2 
   
@@ -212,7 +218,12 @@ ggsave(here("/figures/figure1.jpeg"), width=3.5,height=2,unit="in")
     coord_flip() +
     remove_ticks() +
     remove_axis(axis="x",flip=TRUE)
-ggsave(here("/figures/figure2.jpeg"), width=3,height=3,unit="in")
+  
+fig2 <- urbn_plot(get_legend(fig2),
+                  remove_legend(fig2),
+                  heights = c(0.15, 0.85))
+
+ggsave(here("/figures/figure2.jpeg"), plot=fig2,width=3,height=3,unit="in")
   
 ## Creating Figure 3 
   
@@ -241,7 +252,7 @@ ggsave(here("/figures/figure2.jpeg"), width=3,height=3,unit="in")
              width=-0.7) +  # setting negative width for COI bar to display first - and for data labels 
     scale_y_continuous(expand = expand_scale(mult = c(0, 0.2)),
                        limits = c(0, NA)) +
-    scale_x_discrete(labels=c("Not burdened",
+    scale_x_discrete(labels=c("Not\nburdened",
                              "Somewhat\nburdened",
                              "Severely\nburdened"))+
     geom_text(aes(label=paste0(share,"%")),
@@ -258,12 +269,15 @@ ggsave(here("/figures/figure2.jpeg"), width=3,height=3,unit="in")
     remove_ticks() +
     remove_axis(axis="x",flip=TRUE)
   
-urbn_plot(get_legend(fig3),
-          remove_legend(fig3),
-          heights = c(0.3, 0.7))
+fig3 <- urbn_plot(get_legend(fig3),
+                  remove_legend(fig3),
+                  heights = c(0.15, 0.85))
   
-  
-ggsave(here("/figures/figure3.jpeg"),width=3.5,height=2.5,unit="in")
+ggsave(here("/figures/figure3.jpeg"),
+       plot = fig3, 
+       width = 3.5,
+       height = 2.5,
+       unit = "in")
   
 ## Creating Figure 4 
   
@@ -281,7 +295,7 @@ ggsave(here("/figures/figure3.jpeg"),width=3.5,height=2.5,unit="in")
     geom_line(size=1.1) +
     theme(panel.grid.major.y = element_blank(),
           legend.direction="vertical",
-          axis.text.x = element_text(angle=45, ## Aaron -- why do these look very wonky after rotating?
+          axis.text.x = element_text(angle=45, 
                                      hjust=0.85),
           legend.justification = c("left","top")) + 
     scale_color_manual(values=c(urban_blue,urban_black))+
@@ -295,7 +309,12 @@ ggsave(here("/figures/figure3.jpeg"),width=3.5,height=2.5,unit="in")
                        labels = scales::percent_format(accuracy=1L))+
     labs(x=NULL,
          y=NULL)
-ggsave(here("/figures/figure4.jpeg"),width=3,height=2.25,unit="in")
+  
+fig4 <- urbn_plot(get_legend(fig4),
+                  remove_legend(fig4),
+                  heights = c(0.15, 0.85))
+
+ggsave(here("/figures/figure4.jpeg"),plot=fig4,width=3,height=2.25,unit="in")
   
 
 ```
@@ -308,9 +327,12 @@ ggsave(here("/figures/figure4.jpeg"),width=3,height=2.25,unit="in")
 Children of immigrants are an important part of this country's future. Around `r states_subset$text_1_popcount` children in `r params$state` had at least one immigrant parent in 2017-18. Nationwide, over 18 million children&mdash;a quarter of all people ages 17 and younger&mdash;had at least one immigrant parent. 
 
 These children and their families are the \href{https://www.pewresearch.org/fact-tank/2017/03/08/immigration-projected-to-drive-growth-in-u-s-working-age-population-through-at-least-2035/}{next generation of workers and taxpayers}. Ensuring that they have access to early education and other public supports so they can reach their full potential is \href{https://www.urban.org/research/publication/preparing-future-workforce-early-care-and-education-participation-among-children-immigrants}{essential to the future} of the US and `r params$state`. 
+
+\vspace{-0.1in}
+\urbnheadingone{Who Are Children of Immigrants?}
+
 \columnratio{0.45}
 \begin{paracol}{2}
-\urbnheadingone{Who Are Children of Immigrants?}
 
 \textbf{Most are US citizens, and many have families with deep US ties (figure 1).} `r states_subset$text_2_citizens` children of immigrants are citizens (`r states_subset$share_uscitizen_coi` percent in `r params$state` and over 83 percent nationwide); `r states_subset$text_3_citizens` have at least one citizen parent. Additionally, `r states_subset$share_prtUS10plusyrs_coi` percent of children of immigrants statewide have parents who have been in the US for 10 years or longer. 
 
@@ -324,6 +346,7 @@ Nevertheless, immigration enforcement efforts and other federal immigration init
 
 \switchcolumn
 
+\vspace{-0.08in}
 \urbnfigurenumber{1}
 \urbnfiguretitle{`r params$state` Children, by Citizenship and Parental Birthplace, 2017-18}
 
@@ -346,18 +369,23 @@ Nevertheless, immigration enforcement efforts and other federal immigration init
 
 Children need \href{https://www.urban.org/research/publication/earnings-dynamics-role-education-throughout-workers-career}{quality education}, \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{access to health care}, and \href{https://www.urban.org/research/publication/stabilizing-childrens-lives}{stable housing} to thrive. For some families, federal, state, and community initiatives, including public prorams and \href{https://www.taxpolicycenter.org/taxvox/immigration-debate-another-reason-we-ought-separate-work-and-family-credits}{tax credits}, can help mitigate the effects of poverty and ensure a level playing field. Invseting in these initiatives also has \href{https://www.urban.org/research/publication/pfs-ece-state-science-early-childhood-interventions}{positive economic payoffs}. 
 
+\vspace{-0.02in}
 \textbf{Safe and stable housing} is the foundation for children's development, but high housing costs can put pressure on family budgets. 
 
 In `r params$state`, around `r states_subset$share_hcb_max_coi` percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with `r states_subset$share_hcb_max_nat` percent of children with only US born parents (figure 3).
 
+\vspace{-0.02in}
 Government programs \href{https://www.urban.org/urban-wire/using-housing-policy-tools-build-ladders-middle-class}{can help} create and preserve more affordable housing and provide ladders to opportunity. But substantial shares of immigrant families have recently reported avoiding \href{https://www.urban.org/research/publication/one-seven-adults-immigrant-families-reported-avoiding-public-benefit-programs-2018}{public programs} or \href{https://www.urban.org/research/publication/adults-immigrant-families-report-avoiding-routine-activities-because-immigration-concerns}{other activities} because of immigration concerns. 
 
+\vspace{-0.02in}
 \textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r params$state`, the share of children without health insurance has `r states_subset$text_1_uninsure` in recent years (figure 4), and the difference in coverage rates between children of immigrants and others has narrowed. In 2016-17, the difference `r states_subset$text_3_uninsure` from the prior year.
 
+\vspace{-0.02in}
 Public insurance programs like Medicaid are \href{https://www.urban.org/research/publication/improvements-uninsurance-and-medicaidchip-participation-among-children-and-parents-stalled-2017}{one piece of the puzzle} in covering children and families. But immigrant families have \href{https://www.urban.org/research/publication/safety-net-access-context-public-charge-rule}{reported being afraid of} participating in a range of health and nutrition programs, despite their \href{https://www.urban.org/research/publication/proposed-snap-work-requirements-and-childrens-food-security}{demonstrated benefits}, because of the current policy climate. 
 
 \switchcolumn
 
+\vspace{-0.08in}
 \urbnfigurenumber{3}
 \urbnfiguretitle{Household Housing and Utility Cost Burden for `r params$state` Children, 2017-18}
 
@@ -372,9 +400,10 @@ Public insurance programs like Medicaid are \href{https://www.urban.org/research
 
 High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r params$state`, around `r states_subset$share_preschool_of3to5_coi` percent of children of immigrants ages 3-5 were enrolled in preschool in 2017-18, compared with `r states_subset$share_preschool_of3to5_nat` percent of 3- to 5-year-olds with only US-born parents. \footnote{Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
 
-**Children of immigrants are and will continue to be part of the state's future and the nation's. Understanding their diversity and supporting immigrant families can help ensure our collective prosperity.**
+\vspace{-0.02in}
+\textbf{Children of immigrants are and will continue to be part of the state's future and the nation's. Understanding their diversity and supporting immigrant families can help ensure our collective prosperity.}
 
-*This fact sheet draws from the Children of Immigrants Data Tool* (\href{https://urbn.is/36q5WZC}{https://urbn.is/36q5WZC}), *where users can view and download data about children for all 50 states, Washington, DC, and the 100 largest metropolitan areas. The tool's technical appendix includes data sources, methods, and a glossary.*
+\small{\textit{This fact sheet draws from the Children of Immigrants Data Tool* (\href{https://urbn.is/36q5WZC}{https://urbn.is/36q5WZC}), *where users can view and download data about children for all 50 states, Washington, DC, and the 100 largest metropolitan areas. The tool's technical appendix includes data sources, methods, and a glossary.}}
 
 \urbnboilerplate{Annie E. Casey Foundation}{February}{2020}
 
