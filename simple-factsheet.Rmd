@@ -8,8 +8,8 @@ font:     Lato
 geometry: "left=1in,right=1in,top=0.35in,bottom=0.6in"
 urlcolor: #169d62
 params:
-  state: "Texas"
-  state_abbrev: "TX"
+  state: "California"
+  state_abbrev: "CA"
 editor_options: 
   chunk_output_type: console
 ---
@@ -42,25 +42,27 @@ filepath <- here("/data/factsheet_who are-support_data_states_201718_varnames.xl
 
 topercent <- function(x) {
   if(abs(x) > 0.01) {
-    round((x*100),0)
+    round((x * 100),0)
   } else{
-    round((x*100),1)
+    round((x * 100),1)
   }
 } 
 
 states_subset <- read_excel(filepath) %>%
   filter(StateName == params$state) %>%
-  rename_at(vars(contains("1718")),~sub("_1718","",.)) %>%
+  rename_at(vars(contains("1718")),~sub("_1718", "", .)) %>%
   
   # prepare overall cOI population number - rounded thousand or numeric + "million" text
-  mutate(text_1_popcount = case_when(total_popcount_coi < 1000000 ~ formatC(total_popcount_coi,format="f",digits=0,big.mark=","),
-                                     TRUE ~ paste(round((total_popcount_coi/1000000),1),"million"))) %>%
+  mutate(text_1_popcount = case_when(total_popcount_coi < 1000000 ~ formatC(total_popcount_coi,
+                                                                            format ="f", 
+                                                                            digits = 0,
+                                                                            big.mark =","),
+                                     TRUE ~ paste(round((total_popcount_coi/1000000),1), "million"))) %>%
   
   # convert decimals to be communicated as percentages - no decimals except under 1% 
   # Except for those that will only be used in data vis 
   mutate_at(vars(starts_with("pct"),
-                 starts_with("share"),
-                 -starts_with("share_noinsure")),topercent) %>%
+                 starts_with("share")), topercent) %>%
   
   # prepare strings that'll change
   mutate(text_2_citizens = case_when(share_uscitizen_coi >= 85 ~ "Almost all",
@@ -95,13 +97,6 @@ states_subset <- read_excel(filepath) %>%
          text_1_uninsure = case_when(temp_1_uninsure >= 0.01 ~ "fallen",
                                      abs(temp_1_uninsure) < 0.01 ~ "not changed dramatically",
                                      temp_1_uninsure <= 0.01 ~ "risen",
-                                     TRUE ~ NA_character_),
-         
-         temp_3_uninsure = abs(share_noinsure_nat_1516-share_noinsure_coi_1516)-abs(share_noinsure_nat_1617-share_noinsure_coi_1617),
-         
-         text_3_uninsure = case_when(temp_3_uninsure >= 0.005 ~ "increased",
-                                     abs(temp_3_uninsure) < 0.005 ~ "remained stable",
-                                     temp_3_uninsure <= -0.005 ~ "decreased",
                                      TRUE ~ NA_character_)) %>%
   select(-starts_with("temp"))
   
@@ -152,7 +147,8 @@ race_subset <- states_subset %>%
            labels_plot = replace_na(labels_plot," "),
            labels_plot = case_when(labels_plot != " " ~ paste0(labels_plot,"%"),
                               TRUE ~ labels_plot),
-           labels_legend = paste0("(",as.numeric(share),"%",")")) 
+           labels_legend = case_when(labels_plot == " " ~ paste0("(",as.numeric(share),"%",")"),
+                                     TRUE ~ " ")) 
   
   labels_legend <- fig1_data$labels_legend
   
@@ -305,6 +301,7 @@ ggsave(here("/figures/figure3.jpeg"),
     pivot_longer(everything()) %>%
     separate(name, c("prefix1","prefix2","par_status","year")) %>%
     select(-starts_with("prefix")) %>%
+    mutate(value = value/100) %>%
     rename(share=value) %>%
     mutate(par_status = factor(par_status,
                                labels=c("At least one immigrant parent",
@@ -321,9 +318,9 @@ ggsave(here("/figures/figure3.jpeg"),
     scale_color_manual(values=c(urban_blue,urban_black))+
     scale_x_continuous(expand=expand_scale(mult=c(0.002,0)),
                        breaks = c(2008:2016),
-                       labels=c("2008--09","2009--10","2010--11","2011--12","2012--13",
-                                "2013--14","2014--15","2015--16","2016--17")) + 
-    scale_y_continuous(expand=expand_scale(mult=c(0,0.05)),
+                       labels=c("2008`–`19","2009-10","2010-11","2011-12","2012-13",
+                                "2013-14","2014-15","2015-16","2016-17")) + 
+    scale_y_continuous(expand=expand_scale(mult=c(0.05,0.05)),
                        labels = scales::percent_format(accuracy=1L))+
   labs(x=NULL,
        y=NULL)
@@ -378,25 +375,25 @@ Nevertheless, immigration enforcement efforts and other federal immigration init
 \end{paracol}
 
 \newpage{}
-\newgeometry{left=1in,right=1in,top=1in,bottom=1.5in}
+\newgeometry{left=1in,right=1in,top=1in,bottom=1.2in}
 
 \urbnheadingone{How Can Public Investments Support Children of Immigrants' Success?}
 
-\columnratio{0.5}
+\columnratio{0.49}
 \begin{paracol}{2}
 
-Children need \href{https://www.urban.org/research/publication/earnings-dynamics-role-education-throughout-workers-career}{quality education}, \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{access to health care}, and \href{https://www.urban.org/research/publication/stabilizing-childrens-lives}{stable housing} to thrive. For some families, federal, state, and community initiatives, including public prorams and \href{https://www.taxpolicycenter.org/taxvox/immigration-debate-another-reason-we-ought-separate-work-and-family-credits}{tax credits}, can help mitigate the effects of poverty and ensure a level playing field. Investing in these initiatives also has \href{https://www.urban.org/research/publication/pfs-ece-state-science-early-childhood-interventions}{positive economic payoffs}. 
+Children need \href{https://www.urban.org/research/publication/earnings-dynamics-role-education-throughout-workers-career}{quality education}, \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{access to health care}, and \href{https://www.urban.org/research/publication/stabilizing-childrens-lives}{stable housing} to thrive. For some families, federal, state, and community initiatives, including public programs and \href{https://www.taxpolicycenter.org/taxvox/immigration-debate-another-reason-we-ought-separate-work-and-family-credits}{tax credits}, can help mitigate the effects of poverty and ensure a level playing field. Investing in these initiatives also has \href{https://www.urban.org/research/publication/pfs-ece-state-science-early-childhood-interventions}{positive economic payoffs}. 
 
-\vspace{-0.01in}
+\vspace{-0.02in}
 \textbf{Safe and stable housing} is the foundation for children's development, but high housing costs can put pressure on family budgets. 
 
-In `r params$state`, around `r states_subset$share_hcb_max_coi` percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with `r states_subset$share_hcb_max_nat` percent of children with only US born parents (figure 3).$^{1}$
+In `r params$state`, around `r states_subset$share_hcb_max_coi` percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with `r states_subset$share_hcb_max_nat` percent of children with only US-born parents (figure 3).$^{1}$
 
 \vspace{-0.02in}
 Government programs \href{https://www.urban.org/urban-wire/using-housing-policy-tools-build-ladders-middle-class}{can help} create and preserve more affordable housing and provide ladders to opportunity. But substantial shares of immigrant families have recently reported avoiding \href{https://www.urban.org/research/publication/one-seven-adults-immigrant-families-reported-avoiding-public-benefit-programs-2018}{public programs} or \href{https://www.urban.org/research/publication/adults-immigrant-families-report-avoiding-routine-activities-because-immigration-concerns}{other activities} because of immigration concerns. 
 
 \vspace{-0.02in}
-\textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r params$state`, the share of children without health insurance has `r states_subset$text_1_uninsure` in recent years (figure 4), and the difference in coverage rates between children of immigrants and others has narrowed. In 2016--17, the difference `r states_subset$text_3_uninsure` from the prior year.
+\textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r params$state`, the share of all children without health insurance has `r states_subset$text_1_uninsure` in recent years. The share of uninsured children of immigrants and others, respectively, was `r states_subset$share_noinsure_coi_0809` percent and `r states_subset$share_noinsure_nat_0809` percent in 2008--09, `r states_subset$share_noinsure_coi_1213` percent and `r states_subset$share_noinsure_nat_1213` percent in 2012--13, and `r states_subset$share_noinsure_coi_1617` percent and `r states_subset$share_noinsure_nat_1617` percent in 2016--17 (figure 4). 
 
 \vspace{-0.02in}
 Public insurance programs like Medicaid are \href{https://www.urban.org/research/publication/improvements-uninsurance-and-medicaidchip-participation-among-children-and-parents-stalled-2017}{one piece of the puzzle} in covering children and families. But immigrant families have \href{https://www.urban.org/research/publication/safety-net-access-context-public-charge-rule}{reported being afraid of} participating in a range of health and nutrition programs, despite their \href{https://www.urban.org/research/publication/proposed-snap-work-requirements-and-childrens-food-security}{demonstrated benefits}, because of the current policy climate. 
@@ -421,7 +418,7 @@ High-quality **early education** \href{https://www.brookings.edu/research/puzzli
 \vspace{-0.02in}
 \textbf{Children of immigrants are and will continue to be part of the state's future and the nation's. Understanding their diversity and supporting immigrant families can help ensure our collective prosperity.}
 
-\small{\textit{This fact sheet draws from the Children of Immigrants Data Tool} (\href{https://urbn.is/36q5WZC}{https://urbn.is/36q5WZC}), \textit{where users can view and download data about children for all 50 states, Washington, DC, and the 100 largest metropolitan areas. The tool's technical appendix includes data sources, methods, and a glossary.}}
+\small{\textit{This fact sheet draws from the children of immigrants data tool} (\href{https://urbn.is/36q5WZC}{https://urbn.is/36q5WZC}), \textit{where users can view and download data about children for all 50 states, Washington, DC, and the 100 largest metropolitan areas. The tool's technical appendix includes data sources, methods, and a glossary.}}
 
 \urbnboilerplate{Annie E. Casey Foundation}{February}{2020}
 
