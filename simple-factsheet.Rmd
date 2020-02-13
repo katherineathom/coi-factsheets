@@ -8,8 +8,8 @@ font:     Lato
 geometry: "left=1in,right=1in,top=0.35in,bottom=0.6in"
 urlcolor: #169d62
 params:
-  state: "California"
-  state_abbrev: "CA"
+  state: "Texas"
+  state_abbrev: "TX"
 editor_options: 
   chunk_output_type: console
 ---
@@ -125,7 +125,7 @@ race_subset <- states_subset %>%
   # Ordered vectors of percents, labels for race groups, and text strings (mostly empty) to insert in race paragraph 
   race_percents <- race_subset$share
   race_labels <- race_subset$race
-  race_growth <- ifelse(race_subset$fastest == 1, "—the fastest growing group","")
+  race_growth <- ifelse(race_subset$fastest == 1, "—the fastest-growing group","")
 
   urban_blue <- urbnthemes::palette_urbn_diverging[7]
   urban_black <- urbnthemes::palette_urbn$categorical[[3]][3]
@@ -134,7 +134,7 @@ race_subset <- states_subset %>%
   
 ## Creating Figure 1
   
-  fig1 <- states_subset %>%
+  fig1_data <- states_subset %>%
     select(c("share_natpar","share_uscitz_coi","share_noncitz_coi","share_unkpar")) %>%
     pivot_longer(everything()) %>%
     rename(par_status = name,
@@ -146,19 +146,24 @@ race_subset <- states_subset %>%
                                       "share_uscitz_coi",
                                       "share_natpar")), 
            var = rep("citizenship",times=nrow(.)),
-           labels = case_when(share < 10 ~ NA_real_,
+           labels_plot = case_when(share < 10 ~ NA_real_,
                               share >= 10 ~ share), 
-           labels = as.character(labels),
-           labels = replace_na(labels," "),
-           labels = case_when(labels != " " ~ paste0(labels,"%"),
-                              TRUE ~ labels)) %>%
+           labels_plot = as.character(labels_plot),
+           labels_plot = replace_na(labels_plot," "),
+           labels_plot = case_when(labels_plot != " " ~ paste0(labels_plot,"%"),
+                              TRUE ~ labels_plot),
+           labels_legend = paste0("(",as.numeric(share),"%",")")) 
+  
+  labels_legend <- fig1_data$labels_legend
+  
+  fig1 <- fig1_data %>%
     ggplot() + 
     geom_col(mapping=aes(x=var,y=share,fill=par_status),
              width=1)  +
-    scale_fill_manual(labels=c("Parental birthplace unknown",
-                                 "Noncitizens with immigrant parent(s)",
-                                 "US citizens with immigrant parent(s)",
-                                 "Only US-born parents"),
+    scale_fill_manual(labels=c(paste("Parental birthplace unknown",labels_legend[4],sep=" "),
+                               paste("Noncitizens with immigrant parent(s)",labels_legend[3],sep=" "),
+                               paste("US citizens with immigrant parent(s)",labels_legend[2],sep=" "),
+                               paste("Only US-born parents",labels_legend[1],sep=" ")),
                       values=c(urban_grey, urban_lightblue, urban_blue, urban_black),
                       guide = guide_legend(reverse=TRUE)) +
     theme(axis.text = element_blank(),
@@ -167,7 +172,7 @@ race_subset <- states_subset %>%
           legend.direction = "vertical",
           legend.text=element_text(size=9),
           plot.background = element_blank()) +
-    geom_text(aes(x = var,y = share,label=labels),
+    geom_text(aes(x = var,y = share,label=labels_plot),
               position=position_stack(vjust=0.5),
               color=c("white","white","black","black"))+
     remove_axis() +
@@ -316,12 +321,10 @@ ggsave(here("/figures/figure3.jpeg"),
     scale_color_manual(values=c(urban_blue,urban_black))+
     scale_x_continuous(expand=expand_scale(mult=c(0.002,0)),
                        breaks = c(2008:2016),
-                       labels=c("2008-09","2009-10","2010-11","2011-12","2012-13",
-                                "2013-14","2014-15","2015-16","2016-17")) + 
-    scale_y_continuous(expand=expand_scale(mult=c(0,0.02)),
-                       breaks=c(0:7 * 2)/100,
-                       labels = scales::percent_format(accuracy=1L),
-                       limits=c(0,0.14))+
+                       labels=c("2008--09","2009--10","2010--11","2011--12","2012--13",
+                                "2013--14","2014--15","2015--16","2016--17")) + 
+    scale_y_continuous(expand=expand_scale(mult=c(0,0.05)),
+                       labels = scales::percent_format(accuracy=1L))+
   labs(x=NULL,
        y=NULL)
   
@@ -339,7 +342,7 @@ ggsave(here("/figures/figure4.jpeg"),plot=fig4,width=3,height=2.25,unit="in")
 \urbntitle{The Future of `r params$state` Depends on Children of Immigrants}
 \urbnauthors{Cary Lou, Erica Greenberg, and Kate Thomas}
 
-Children of immigrants are an important part of this country's future. Around `r states_subset$text_1_popcount` children in `r params$state` had at least one immigrant parent in 2017-18. Nationwide, over 18 million children&mdash;a quarter of all people ages 17 and younger&mdash;had at least one immigrant parent. 
+Children of immigrants are an important part of this country's future. Around `r states_subset$text_1_popcount` children in `r params$state` had at least one immigrant parent in 2017--18. Nationwide, over 18 million children&mdash;a quarter of all people ages 17 and younger&mdash;had at least one immigrant parent. 
 
 These children and their families are the \href{https://www.pewresearch.org/fact-tank/2017/03/08/immigration-projected-to-drive-growth-in-u-s-working-age-population-through-at-least-2035/}{next generation of workers} and taxpayers. Ensuring that they have access to early education and other public supports so they can reach their full potential is \href{https://www.urban.org/research/publication/preparing-future-workforce-early-care-and-education-participation-among-children-immigrants}{essential to the future} of the US and `r params$state`. 
 
@@ -355,20 +358,20 @@ Nevertheless, immigration enforcement efforts and other federal immigration init
 
 \textbf{Their family employment is high, yet their family incomes are still relatively low (figure 2).} In `r params$state`, the shares of children with family members \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{working substantial hours} (1,000+ hours each on average or 1,800+ hours total) are `r states_subset$text_4_employment` children of US-born parents. 
 
-`r states_subset$text_5_lowinc` `r states_subset$share_below200povr_coi` percent of children of immigrants lived in families with \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{low incomes} (below 200 percent of the federal poverty level) in 2017-18, compared with `r states_subset$share_below200povr_nat` percent of children with only US-born parents. 
+`r states_subset$text_5_lowinc` `r states_subset$share_below200povr_coi` percent of children of immigrants lived in families with \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{low incomes} (below 200 percent of the federal poverty level) in 2017--18, compared with `r states_subset$share_below200povr_nat` percent of children with only US-born parents. 
 
 \textbf{They come from`r states_subset$text_6_race`diverse backgrounds.}   Around `r race_percents[1]` percent of children of immigrants in `r params$state` are `r race_labels[1]``r race_growth[1]`, followed by `r race_labels[2]` (`r race_percents[2]` percent`r race_growth[2]`), `r race_labels[3]` (`r race_percents[3]` percent`r race_growth[3]`), and `r race_labels[4]` (`r race_percents[4]` percent`r race_growth[4]`); `r states_subset$share_othmult_coi` percent identify as another race or are multiracial. 
 
 \switchcolumn
 
-\vspace{-0.08in}
+\vspace{-0.35in}
 \urbnfigurenumber{1}
-\urbnfiguretitle{`r params$state` Children, by Citizenship and Parental Birthplace, 2017-18}
+\urbnfiguretitle{`r params$state` Children, by Citizenship and Parental Birthplace, 2017--18}
 
 \includegraphics[width=3.7in]{figures/figure1.jpeg}
 
 \urbnfigurenumber{2}
-\urbnfiguretitle{Family Work and Income Levels of California Children, 2017–18}
+\urbnfiguretitle{Family Work and Income Levels of California Children, 2017--18}
 
 \includegraphics[width=3.7in]{figures/figure2.jpeg}
 
@@ -382,18 +385,18 @@ Nevertheless, immigration enforcement efforts and other federal immigration init
 \columnratio{0.5}
 \begin{paracol}{2}
 
-Children need \href{https://www.urban.org/research/publication/earnings-dynamics-role-education-throughout-workers-career}{quality education}, \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{access to health care}, and \href{https://www.urban.org/research/publication/stabilizing-childrens-lives}{stable housing} to thrive. For some families, federal, state, and community initiatives, including public prorams and \href{https://www.taxpolicycenter.org/taxvox/immigration-debate-another-reason-we-ought-separate-work-and-family-credits}{tax credits}, can help mitigate the effects of poverty and ensure a level playing field. Invseting in these initiatives also has \href{https://www.urban.org/research/publication/pfs-ece-state-science-early-childhood-interventions}{positive economic payoffs}. 
+Children need \href{https://www.urban.org/research/publication/earnings-dynamics-role-education-throughout-workers-career}{quality education}, \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{access to health care}, and \href{https://www.urban.org/research/publication/stabilizing-childrens-lives}{stable housing} to thrive. For some families, federal, state, and community initiatives, including public prorams and \href{https://www.taxpolicycenter.org/taxvox/immigration-debate-another-reason-we-ought-separate-work-and-family-credits}{tax credits}, can help mitigate the effects of poverty and ensure a level playing field. Investing in these initiatives also has \href{https://www.urban.org/research/publication/pfs-ece-state-science-early-childhood-interventions}{positive economic payoffs}. 
 
 \vspace{-0.01in}
 \textbf{Safe and stable housing} is the foundation for children's development, but high housing costs can put pressure on family budgets. 
 
-In `r params$state`, around `r states_subset$share_hcb_max_coi` percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with `r states_subset$share_hcb_max_nat` percent of children with only US born parents (figure 3).$^{\color{urbnblue}1}$
+In `r params$state`, around `r states_subset$share_hcb_max_coi` percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with `r states_subset$share_hcb_max_nat` percent of children with only US born parents (figure 3).$^{1}$
 
 \vspace{-0.02in}
 Government programs \href{https://www.urban.org/urban-wire/using-housing-policy-tools-build-ladders-middle-class}{can help} create and preserve more affordable housing and provide ladders to opportunity. But substantial shares of immigrant families have recently reported avoiding \href{https://www.urban.org/research/publication/one-seven-adults-immigrant-families-reported-avoiding-public-benefit-programs-2018}{public programs} or \href{https://www.urban.org/research/publication/adults-immigrant-families-report-avoiding-routine-activities-because-immigration-concerns}{other activities} because of immigration concerns. 
 
 \vspace{-0.02in}
-\textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r params$state`, the share of children without health insurance has `r states_subset$text_1_uninsure` in recent years (figure 4), and the difference in coverage rates between children of immigrants and others has narrowed. In 2016-17, the difference `r states_subset$text_3_uninsure` from the prior year.
+\textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r params$state`, the share of children without health insurance has `r states_subset$text_1_uninsure` in recent years (figure 4), and the difference in coverage rates between children of immigrants and others has narrowed. In 2016--17, the difference `r states_subset$text_3_uninsure` from the prior year.
 
 \vspace{-0.02in}
 Public insurance programs like Medicaid are \href{https://www.urban.org/research/publication/improvements-uninsurance-and-medicaidchip-participation-among-children-and-parents-stalled-2017}{one piece of the puzzle} in covering children and families. But immigrant families have \href{https://www.urban.org/research/publication/safety-net-access-context-public-charge-rule}{reported being afraid of} participating in a range of health and nutrition programs, despite their \href{https://www.urban.org/research/publication/proposed-snap-work-requirements-and-childrens-food-security}{demonstrated benefits}, because of the current policy climate. 
@@ -402,7 +405,7 @@ Public insurance programs like Medicaid are \href{https://www.urban.org/research
 
 \vspace{-0.08in}
 \urbnfigurenumber{3}
-\urbnfiguretitle{Household Housing and Utility Cost Burden for `r params$state` Children, 2017-18}
+\urbnfiguretitle{Household Housing and Utility Cost Burden for `r params$state` Children, 2017--18}
 
 \includegraphics[width=5in]{figures/figure3.jpeg}
 
@@ -413,7 +416,7 @@ Public insurance programs like Medicaid are \href{https://www.urban.org/research
 
 \end{paracol}
 
-High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r params$state`, around `r states_subset$share_preschool_of3to5_coi` percent of children of immigrants ages 3-5 were enrolled in preschool in 2017-18, compared with `r states_subset$share_preschool_of3to5_nat` percent of 3- to 5-year-olds with only US-born parents. \footnote{Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
+High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r params$state`, around `r states_subset$share_preschool_of3to5_coi` percent of children of immigrants ages 3--5 were enrolled in preschool in 2017--18, compared with `r states_subset$share_preschool_of3to5_nat` percent of 3- to 5-year-olds with only US-born parents. \footnote{$^{1}$Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
 
 \vspace{-0.02in}
 \textbf{Children of immigrants are and will continue to be part of the state's future and the nation's. Understanding their diversity and supporting immigrant families can help ensure our collective prosperity.}

@@ -1,3 +1,6 @@
+
+
+
 library(tidyverse)
 library(readxl)
 
@@ -20,3 +23,5 @@ runs <- tibble(
 runs %>%
   select(output_file = filename, params) %>%
   pwalk(rmarkdown::render, input = "simple-factsheet.Rmd", output_dir = "factsheets")
+
+
