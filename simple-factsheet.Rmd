@@ -361,7 +361,7 @@ Nevertheless, immigration enforcement efforts and other federal immigration init
 
 `r states_subset$text_5_lowinc` `r states_subset$share_below200povr_coi` percent of children of immigrants lived in families with \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{low incomes} (below 200 percent of the federal poverty level) in 2017--18, compared with `r states_subset$share_below200povr_nat` percent of children with only US-born parents. 
 
-\textbf{They come from`r states_subset$text_6_race`diverse backgrounds.}   Around `r race_percents[1]` percent of children of immigrants in `r state_text` are `r race_labels[1]``r race_growth[1]`, followed by `r race_labels[2]` (`r race_percents[2]` percent`r race_growth[2]`), `r race_labels[3]` (`r race_percents[3]` percent`r race_growth[3]`), and `r race_labels[4]` (`r race_percents[4]` percent`r race_growth[4]`); `r states_subset$share_othmult_coi` percent identify as another race or are multiracial. 
+\textbf{They come from`r states_subset$text_6_race`diverse backgrounds.}   Around `r race_percents[1]` percent of children of immigrants in `r state_text` are `r race_labels[1]`, followed by `r race_labels[2]` (`r race_percents[2]` percent), `r race_labels[3]` (`r race_percents[3]` percent), and `r race_labels[4]` (`r race_percents[4]` percent); `r states_subset$share_othmult_coi` percent identify as another race or are multiracial. 
 
 \switchcolumn
 
