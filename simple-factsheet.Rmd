@@ -23,6 +23,7 @@ knitr::opts_chunk$set(warning = FALSE)
 knitr::opts_chunk$set(dev = "cairo_pdf")
 options(knitr.kable.NA = "")
 options(kableExtra.latex.load_packages = FALSE)
+options(tinytex.verbose = TRUE)
 
 library(tidyverse)
 library(knitr)
@@ -57,11 +58,12 @@ states_subset <- read_excel(filepath) %>%
   rename_at(vars(contains("1718")),~sub("_1718", "", .)) %>%
   
   # prepare overall cOI population number - rounded thousand or numeric + "million" text
-  mutate(text_1_popcount = case_when(total_popcount_coi < 1000000 ~ formatC(total_popcount_coi,
-                                                                            format ="f", 
-                                                                            digits = 0,
-                                                                            big.mark =","),
-                                     TRUE ~ paste(round((total_popcount_coi/1000000),1), "million"))) %>%
+  mutate(text_1_popcount = ifelse(total_popcount_coi < 1000000,
+                                  formatC(total_popcount_coi,
+                                          format ="f", 
+                                          digits = 0,
+                                          big.mark =","),
+                                  paste(round((total_popcount_coi/1000000),1), "million"))) %>%
   
   # convert decimals to be communicated as percentages - no decimals except under 1% 
   # Except for those that will only be used in data vis 
@@ -71,27 +73,24 @@ states_subset <- read_excel(filepath) %>%
   # prepare strings that'll change
   mutate(text_2_citizens = case_when(share_uscitizen_coi >= 85 ~ "Almost all",
                                      share_uscitizen_coi < 85 & share_uscitizen_coi >= 50 ~ "Most",
-                                     share_uscitizen_coi < 50 ~ "Many",
-                                     TRUE ~ NA_character_),
+                                     share_uscitizen_coi < 50 ~ "Many"),
          
          text_3_citizens = case_when(share_prtnatcit_coi >= 50 ~ "most",
-                                     share_prtnatcit_coi < 50 ~ "many",
-                                     TRUE ~ NA_character_),
+                                     share_prtnatcit_coi < 50 ~ "many"),
          
          temp_working_diff = share_workingfam_coi - share_workingfam_nat,
          
-         text_4_employment = case_when(abs(temp_working_diff) < 3 ~ "similar for children of immigrants and",
-                                       temp_working_diff < 6 & temp_working_diff >=3 ~ "slightly higher for children of immigrants than",
-                                       temp_working_diff >= 6 ~ "higher for children of immigrants than",
-                                       temp_working_diff > -6 & temp_working_diff <= -3 ~ "slightly lower for children of immigrants than",
-                                       temp_working_diff <= -6 ~ "lower for children of immigrants than"), 
+         case_when(temp_working_diff <= -6     ~ "lower for children of immigrants than",
+                   temp_working_diff <= -3     ~ "slightly lower for children of immigrants than",
+                   temp_working_diff < 3 ~ "similar for children of immigrants and",
+                   temp_working_diff < 6         ~ "slightly higher for children of immigrants than",
+                   TRUE                                     ~ "higher for children of immigrants than"), 
          
          text_5_lowinc = case_when(temp_working_diff <= -3 | (share_above200povr_coi >- share_above200povr_nat) ~ "Around",
-                                   temp_working_diff > -3 ~ "Yet,",
-                                   TRUE ~ NA_character_),
+                                   temp_working_diff > -3 ~ "Yet,"),
          
          text_6_race = case_when((share_asian_coi >= 75 |
-                                  share_black_coi >= 75 | 
+                                    share_black_coi >= 75 | 
                                   share_hispanic_coi >= 75 |
                                   share_white_coi >= 75 ~ " fairly "),
                                  TRUE ~ " "),
@@ -99,19 +98,17 @@ states_subset <- read_excel(filepath) %>%
          temp_1_uninsure = (share_noinsure_all_0809) - (share_noinsure_all_1617),
          
          text_1_uninsure = case_when(temp_1_uninsure >= 1 ~ "fallen",
-                                     abs(temp_1_uninsure) < 1 ~ "not changed dramatically",
-                                     temp_1_uninsure <= 1 ~ "risen",
-                                     TRUE ~ NA_character_)) %>%
+                                     temp_1_uninsure > -1 ~ "not changed dramatically",
+                                     TRUE ~ "risen")) %>%
   select(-starts_with("temp"))
   
 # Dataset for race paragraph 
 # handling oth/mult race separately since it doesn't move around like the other racial/ethnic groupings
 race_subset <- states_subset %>%
- select(c("StateName","share_asian_coi","share_black_coi","share_hispanic_coi","share_white_coi",
-        race_COIpop_growmost_0506to1718)) %>%
+  select(StateName, share_asian_coi, share_black_coi, share_hispanic_coi, share_white_coi, race_COIpop_growmost_0506to1718) %>%
   pivot_longer(cols = starts_with("share"),
-              names_to = "race",
-              values_to = "share") %>%
+               names_to = "race",
+               values_to = "share") %>%
   mutate(race = case_when(str_detect(race,"asian") ~ "Asian",
                           str_detect(race,"black") ~ "Black",
                           str_detect(race,"hispanic") ~ "Hispanic",
@@ -134,7 +131,7 @@ race_subset <- states_subset %>%
 ## Creating Figure 1
   
   fig1_data <- states_subset %>%
-    select(c("share_natpar","share_uscitz_coi","share_noncitz_coi","share_unkpar")) %>%
+    select(share_natpar,share_uscitz_coi,share_noncitz_coi,share_unkpar) %>%
     pivot_longer(everything()) %>%
     rename(par_status = name,
            share = value) %>%
@@ -144,7 +141,7 @@ race_subset <- states_subset %>%
                                       "share_noncitz_coi",
                                       "share_uscitz_coi",
                                       "share_natpar")), 
-           var = rep("citizenship",times=nrow(.)),
+           var = "citizenship",
            labels_plot = case_when(share < 10 ~ NA_real_,
                               share >= 10 ~ share), 
            labels_plot = as.character(labels_plot),
