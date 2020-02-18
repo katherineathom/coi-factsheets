@@ -12,6 +12,7 @@ params:
   state_abbrev: "DC"
 editor_options: 
   chunk_output_type: console
+  
 ---
 
 \raggedright
@@ -423,12 +424,12 @@ Public insurance programs like Medicaid are \href{https://www.urban.org/research
 
 \end{paracol}
 
-High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r state_text`, around `r states_subset$share_preschool_of3to5_coi` percent of children of immigrants ages 3--5 were enrolled in preschool in 2017--18, compared with `r states_subset$share_preschool_of3to5_nat` percent of 3- to 5-year-olds with only US-born parents. \footnote{$^{1}$Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
+High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r state_text`, around `r states_subset$share_preschool_of3to5_coi` percent of children of immigrants ages 3 to 5 were enrolled in preschool in 2017--18, compared with `r states_subset$share_preschool_of3to5_nat` percent of 3-to-5-year-olds with only US-born parents. \footnote{$^{1}$Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
 
 \vspace{-0.025in}
 \textbf{Children of immigrants are and will continue to be part of the state's future and the nation's. Understanding their diversity and supporting immigrant families can help ensure our collective prosperity.}
 
-\small{\textit{This fact sheet draws from the children of immigrants data tool} (\href{https://urbn.is/36q5WZC}{https://urbn.is/36q5WZC}), \textit{where users can view and download data about children for all 50 states, Washington, DC, and the 100 largest metropolitan areas. The tool's technical appendix includes data sources, methods, and a glossary.}}
+\small{\textit{This fact sheet draws from the children of immigrants data tool} (\href{https://urbn.is/36q5WZC}{https://urbn.is/36q5WZC}), \textit{where users can view and download data about children for all 50 states; Washington, DC; and the 100 largest metropolitan areas. The tool's technical appendix includes data sources, methods, and a glossary.}}
 
 \urbnboilerplate{the Annie E. Casey Foundation}{February}{2020}
 
