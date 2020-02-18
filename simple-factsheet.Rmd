@@ -102,9 +102,11 @@ states_subset <-data %>%
          
          temp_1_uninsure = (share_noinsure_all_0809) - (share_noinsure_all_1617),
          
-         text_1_uninsure = case_when(temp_1_uninsure >= 1 ~ "fallen",
-                                     temp_1_uninsure > -1 ~ "not changed dramatically",
-                                     TRUE ~ "risen")) %>%
+         text_1_uninsure = case_when(temp_1_uninsure >= 3 ~ "has fallen since",
+                                     temp_1_uninsure >= 1 ~ "has fallen slightly since",
+                                     temp_1_uninsure >= -1 ~ "is similar as in",
+                                     temp_1_uninsure > -3 ~ "has risen silghtly since",
+                                     TRUE ~ "has risen since")) %>%
   select(-starts_with("temp"))
   
 # Dataset for race paragraph 
@@ -401,7 +403,7 @@ In `r state_text`, around `r states_subset$share_hcb_max_coi` percent of childre
 Government programs \href{https://www.urban.org/urban-wire/using-housing-policy-tools-build-ladders-middle-class}{can help} create and preserve more affordable housing and provide ladders to opportunity. But substantial shares of immigrant families have recently reported avoiding \href{https://www.urban.org/research/publication/one-seven-adults-immigrant-families-reported-avoiding-public-benefit-programs-2018}{public programs} or \href{https://www.urban.org/research/publication/adults-immigrant-families-report-avoiding-routine-activities-because-immigration-concerns}{other activities} because of immigration concerns. 
 
 \vspace{-0.025in}
-\textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r state_text`, the share of all children without health insurance has `r states_subset$text_1_uninsure` since 2008-09 (not shown). The share of uninsured children of immigrants and others, respectively, was `r states_subset$share_noinsure_coi_0809` percent and `r states_subset$share_noinsure_nat_0809` percent in 2008--09, `r states_subset$share_noinsure_coi_1213` percent and `r states_subset$share_noinsure_nat_1213` percent in 2012--13, and `r states_subset$share_noinsure_coi_1617` percent and `r states_subset$share_noinsure_nat_1617` percent in 2016--17 (figure 4). 
+\textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r state_text`, the share of all children without health insurance `r states_subset$text_1_uninsure` 2008-09 (not shown). The share of uninsured children of immigrants and others, respectively, was `r states_subset$share_noinsure_coi_0809` percent and `r states_subset$share_noinsure_nat_0809` percent in 2008--09, `r states_subset$share_noinsure_coi_1213` percent and `r states_subset$share_noinsure_nat_1213` percent in 2012--13, and `r states_subset$share_noinsure_coi_1617` percent and `r states_subset$share_noinsure_nat_1617` percent in 2016--17 (figure 4). 
 
 \vspace{-0.025in}
 Public insurance programs like Medicaid are \href{https://www.urban.org/research/publication/improvements-uninsurance-and-medicaidchip-participation-among-children-and-parents-stalled-2017}{one piece of the puzzle} in covering children and families. But immigrant families have \href{https://www.urban.org/research/publication/safety-net-access-context-public-charge-rule}{reported being afraid of} participating in a range of health and nutrition programs, despite their \href{https://www.urban.org/research/publication/proposed-snap-work-requirements-and-childrens-food-security}{demonstrated benefits}, because of the current policy climate. 
