@@ -41,6 +41,9 @@ set_urbn_defaults(style = "print")
 ```{r plots, include=FALSE, results="hide"}
 filepath <- here("/data/factsheet_who are-support_data_states_201718_varnames.xlsx")
 
+data <- read_excel(filepath) %>%
+  mutate(StateName = ifelse(StateName == "Rhode island","Rhode Island",StateName))
+
 topercent <- function(x) {
   if(abs(x) > 0.01) {
     round((x * 100),0)
@@ -49,11 +52,13 @@ topercent <- function(x) {
   }
 } 
 
+# Fixing DC to add "the" separately from RI because
+# when it's used as a descriptive (e.g. figure titles, D of C children), they don't want "the"
 state_text <- ifelse(params$state == "District of Columbia",
                      paste("the",params$state,sep=" "),
                      params$state)
 
-states_subset <- read_excel(filepath) %>%
+states_subset <-data %>%
   filter(StateName == params$state) %>%
   rename_at(vars(contains("1718")),~sub("_1718", "", .)) %>%
   
@@ -322,7 +327,9 @@ ggsave(here("/figures/figure3.jpeg"),
                        labels=c("2008-09","2009-10","2010-11","2011-12","2012-13",
                                 "2013-14","2014-15","2015-16","2016-17")) + 
     scale_y_continuous(expand=expand_scale(mult=c(0.05,0.05)),
-                       labels = scales::percent_format(accuracy=1L))+
+                       labels = scales::percent_format(accuracy=1L),
+                       breaks=c(0,0.05,0.1,0.15,0.2,0.25,0.3),
+                       limits=c(0,0.3))+
   labs(x=NULL,
        y=NULL)
   
@@ -337,7 +344,7 @@ ggsave(here("/figures/figure4.jpeg"),plot=fig4,width=3,height=2.25,unit="in")
 
 \urbnlogo{}
 
-\urbntitle{The Future of `r state_text` Depends on Children of Immigrants}
+\urbntitle{Children of Immigrants and the Future of `r state_text`}
 \urbnauthors{Cary Lou, Erica Greenberg, and Kate Thomas}
 
 Children of immigrants are an important part of this country's future. Around `r states_subset$text_1_popcount` children in `r state_text` had at least one immigrant parent in 2017--18. Nationwide, over 18 million children&mdash;a quarter of all people ages 17 and younger&mdash;had at least one immigrant parent. 
@@ -376,11 +383,11 @@ Nevertheless, immigration enforcement efforts and other federal immigration init
 \end{paracol}
 
 \newpage{}
-\newgeometry{left=1in,right=1in,top=1in,bottom=1.2in}
+\newgeometry{left=1in,right=1in,top=1in,bottom=1.27in}
 
 \urbnheadingone{How Can Public Investments Support Children of Immigrants' Success?}
 
-\columnratio{0.52}
+\columnratio{0.525}
 \begin{paracol}{2}
 
 Children need \href{https://www.urban.org/research/publication/earnings-dynamics-role-education-throughout-workers-career}{quality education}, \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{access to health care}, and \href{https://www.urban.org/research/publication/stabilizing-childrens-lives}{stable housing} to thrive. For some families, federal, state, and community initiatives, including public programs and \href{https://www.taxpolicycenter.org/taxvox/immigration-debate-another-reason-we-ought-separate-work-and-family-credits}{tax credits}, can help mitigate the effects of poverty and ensure a level playing field. Investing in these initiatives also has \href{https://www.urban.org/research/publication/pfs-ece-state-science-early-childhood-interventions}{positive economic payoffs}. 
@@ -394,7 +401,7 @@ In `r state_text`, around `r states_subset$share_hcb_max_coi` percent of childre
 Government programs \href{https://www.urban.org/urban-wire/using-housing-policy-tools-build-ladders-middle-class}{can help} create and preserve more affordable housing and provide ladders to opportunity. But substantial shares of immigrant families have recently reported avoiding \href{https://www.urban.org/research/publication/one-seven-adults-immigrant-families-reported-avoiding-public-benefit-programs-2018}{public programs} or \href{https://www.urban.org/research/publication/adults-immigrant-families-report-avoiding-routine-activities-because-immigration-concerns}{other activities} because of immigration concerns. 
 
 \vspace{-0.025in}
-\textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r state_text`, the share of all children without health insurance has `r states_subset$text_1_uninsure` in recent years. The share of uninsured children of immigrants and others, respectively, was `r states_subset$share_noinsure_coi_0809` percent and `r states_subset$share_noinsure_nat_0809` percent in 2008--09, `r states_subset$share_noinsure_coi_1213` percent and `r states_subset$share_noinsure_nat_1213` percent in 2012--13, and `r states_subset$share_noinsure_coi_1617` percent and `r states_subset$share_noinsure_nat_1617` percent in 2016--17 (figure 4). 
+\textbf{Health insurance} can be \href{https://www.urban.org/research/publication/consequences-lack-health-insurance-health-and-earnings}{critical to kids' success}. In `r state_text`, the share of all children without health insurance has `r states_subset$text_1_uninsure` since 2008-09 (not shown). The share of uninsured children of immigrants and others, respectively, was `r states_subset$share_noinsure_coi_0809` percent and `r states_subset$share_noinsure_nat_0809` percent in 2008--09, `r states_subset$share_noinsure_coi_1213` percent and `r states_subset$share_noinsure_nat_1213` percent in 2012--13, and `r states_subset$share_noinsure_coi_1617` percent and `r states_subset$share_noinsure_nat_1617` percent in 2016--17 (figure 4). 
 
 \vspace{-0.025in}
 Public insurance programs like Medicaid are \href{https://www.urban.org/research/publication/improvements-uninsurance-and-medicaidchip-participation-among-children-and-parents-stalled-2017}{one piece of the puzzle} in covering children and families. But immigrant families have \href{https://www.urban.org/research/publication/safety-net-access-context-public-charge-rule}{reported being afraid of} participating in a range of health and nutrition programs, despite their \href{https://www.urban.org/research/publication/proposed-snap-work-requirements-and-childrens-food-security}{demonstrated benefits}, because of the current policy climate. 
@@ -421,5 +428,5 @@ High-quality **early education** \href{https://www.brookings.edu/research/puzzli
 
 \small{\textit{This fact sheet draws from the children of immigrants data tool} (\href{https://urbn.is/36q5WZC}{https://urbn.is/36q5WZC}), \textit{where users can view and download data about children for all 50 states, Washington, DC, and the 100 largest metropolitan areas. The tool's technical appendix includes data sources, methods, and a glossary.}}
 
-\urbnboilerplate{Annie E. Casey Foundation}{February}{2020}
+\urbnboilerplate{the Annie E. Casey Foundation}{February}{2020}
 
