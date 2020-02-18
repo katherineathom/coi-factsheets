@@ -43,7 +43,7 @@ set_urbn_defaults(style = "print")
 filepath <- here("/data/factsheet_who are-support_data_states_201718_varnames.xlsx")
 
 data <- read_excel(filepath) %>%
-  mutate(StateName = ifelse(StateName == "Rhode island","Rhode Island",StateName))
+  mutate(StateName = if_else(StateName == "Rhode island", "Rhode Island", StateName))
 
 topercent <- function(x) {
   if(abs(x) > 0.01) {
@@ -55,7 +55,7 @@ topercent <- function(x) {
 
 # Fixing DC to add "the" separately from RI because
 # when it's used as a descriptive (e.g. figure titles, D of C children), they don't want "the"
-state_text <- ifelse(params$state == "District of Columbia",
+state_text <- if_else(params$state == "District of Columbia",
                      paste("the",params$state,sep=" "),
                      params$state)
 
@@ -64,7 +64,7 @@ states_subset <-data %>%
   rename_at(vars(contains("1718")),~sub("_1718", "", .)) %>%
   
   # prepare overall cOI population number - rounded thousand or numeric + "million" text
-  mutate(text_1_popcount = ifelse(total_popcount_coi < 1000000,
+  mutate(text_1_popcount = if_else(total_popcount_coi < 1000000,
                                   formatC(total_popcount_coi,
                                           format ="f", 
                                           digits = 0,
@@ -77,37 +77,38 @@ states_subset <-data %>%
                  starts_with("share")), topercent) %>%
   
   # prepare strings that'll change
-  mutate(text_2_citizens = case_when(share_uscitizen_coi >= 85 ~ "Almost all",
+  mutate(text_2_citizens = case_when(share_uscitizen_coi >= 85                            ~ "Almost all",
                                      share_uscitizen_coi < 85 & share_uscitizen_coi >= 50 ~ "Most",
-                                     share_uscitizen_coi < 50 ~ "Many"),
+                                     share_uscitizen_coi < 50                             ~ "Many"),
          
          text_3_citizens = case_when(share_prtnatcit_coi >= 50 ~ "most",
-                                     share_prtnatcit_coi < 50 ~ "many"),
+                                     share_prtnatcit_coi < 50  ~ "many"),
          
          temp_working_diff = share_workingfam_coi - share_workingfam_nat,
          
-         case_when(temp_working_diff <= -6     ~ "lower for children of immigrants than",
-                   temp_working_diff <= -3     ~ "slightly lower for children of immigrants than",
-                   temp_working_diff < 3 ~ "similar for children of immigrants and",
-                   temp_working_diff < 6         ~ "slightly higher for children of immigrants than",
-                   TRUE                                     ~ "higher for children of immigrants than"), 
+         case_when(temp_working_diff <= -6 ~ "lower for children of immigrants than",
+                   temp_working_diff <= -3 ~ "slightly lower for children of immigrants than",
+                   temp_working_diff < 3   ~ "similar for children of immigrants and",
+                   temp_working_diff < 6   ~ "slightly higher for children of immigrants than",
+                   TRUE                    ~ "higher for children of immigrants than"), 
          
          text_5_lowinc = case_when(temp_working_diff <= -3 | (share_above200povr_coi >- share_above200povr_nat) ~ "Around",
-                                   temp_working_diff > -3 ~ "Yet,"),
+                                   temp_working_diff > -3                                                       ~ "Yet,"),
          
+         # ifelse
          text_6_race = case_when((share_asian_coi >= 75 |
-                                    share_black_coi >= 75 | 
+                                  share_black_coi >= 75 | 
                                   share_hispanic_coi >= 75 |
                                   share_white_coi >= 75 ~ " fairly "),
                                  TRUE ~ " "),
          
          temp_1_uninsure = (share_noinsure_all_0809) - (share_noinsure_all_1617),
          
-         text_1_uninsure = case_when(temp_1_uninsure >= 3 ~ "has fallen since",
-                                     temp_1_uninsure >= 1 ~ "has fallen slightly since",
+         text_1_uninsure = case_when(temp_1_uninsure >= 3  ~ "has fallen since",
+                                     temp_1_uninsure >= 1  ~ "has fallen slightly since",
                                      temp_1_uninsure >= -1 ~ "is similar as in",
-                                     temp_1_uninsure > -3 ~ "has risen silghtly since",
-                                     TRUE ~ "has risen since")) %>%
+                                     temp_1_uninsure > -3  ~ "has risen silghtly since",
+                                     TRUE                  ~ "has risen since")) %>%
   select(-starts_with("temp"))
   
 # Dataset for race paragraph 
@@ -315,8 +316,28 @@ ggsave(here("/figures/figure3.jpeg"),
     mutate(par_status = factor(par_status,
                                labels=c("At least one immigrant parent",
                                         "Only US-born parents")),
-           year = as.numeric(str_extract(year,"^.{2}"))+2000) %>%
-    ggplot(aes(year,share,color=par_status))+
+           year = as.numeric(str_extract(year,"^.{2}"))+2000,
+           year_2 = as.character(year),
+           year_2 = recode(year,
+                           "2008" = "2008–09",
+                           "2009" = "2009–10",
+                           "2010" = "2010–11",
+                           "2011" = "2011–12",
+                           "2012" = "2012–13",
+                           "2013" = "2013–14",
+                           "2014" = "2014–15",
+                           "2015" = "2015–16",
+                           "2016" = "2016–17"),
+           year_2 = factor(year_2,levels = c("2008–09",
+                                             "2009–10",
+                                             "2010–11",
+                                             "2011–12",
+                                             "2012–13",
+                                             "2013–14",
+                                             "2014–15",
+                                             "2015–16",
+                                             "2016–17"))) %>%
+    ggplot(aes(year_2,share,color=par_status,group=par_status))+
     geom_line(size=1.1) +
     theme(panel.grid.major.y = element_blank(),
           legend.direction="vertical",
@@ -325,10 +346,7 @@ ggsave(here("/figures/figure3.jpeg"),
           legend.justification = c("left","top"),
           legend.text=element_text(size=9)) + 
     scale_color_manual(values=c(urban_blue,urban_black))+
-    scale_x_continuous(expand=expand_scale(mult=c(0.002,0)),
-                       breaks = c(2008:2016),
-                       labels=c("2008-09","2009-10","2010-11","2011-12","2012-13",
-                                "2013-14","2014-15","2015-16","2016-17")) + 
+    scale_x_discrete(expand=expand_scale(mult=c(0.002,0))) + 
     scale_y_continuous(expand=expand_scale(mult=c(0.05,0.05)),
                        labels = scales::percent_format(accuracy=1L),
                        breaks=c(0,0.05,0.1,0.15,0.2,0.25,0.3),
@@ -398,7 +416,7 @@ Children need \href{https://www.urban.org/research/publication/earnings-dynamics
 \vspace{-0.025in}
 \textbf{Safe and stable housing} is the foundation for children's development, but high housing costs can put pressure on family budgets. 
 
-In `r state_text`, around `r states_subset$share_hcb_max_coi` percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with `r states_subset$share_hcb_max_nat` percent of children with only US-born parents (figure 3).$^{1}$
+In `r state_text`, around `r states_subset$share_hcb_max_coi` percent of children with an immigrant parent lived in households \href{http://webapp.urban.org/charts/datatool/pages.cfm?p=technicalappendix}{severely burdened} by housing and utility costs, compared with `r states_subset$share_hcb_max_nat` percent of children with only US-born parents (figure 3).\textsuperscript{1}
 
 \vspace{-0.025in}
 Government programs \href{https://www.urban.org/urban-wire/using-housing-policy-tools-build-ladders-middle-class}{can help} create and preserve more affordable housing and provide ladders to opportunity. But substantial shares of immigrant families have recently reported avoiding \href{https://www.urban.org/research/publication/one-seven-adults-immigrant-families-reported-avoiding-public-benefit-programs-2018}{public programs} or \href{https://www.urban.org/research/publication/adults-immigrant-families-report-avoiding-routine-activities-because-immigration-concerns}{other activities} because of immigration concerns. 
@@ -424,7 +442,7 @@ Public insurance programs like Medicaid are \href{https://www.urban.org/research
 
 \end{paracol}
 
-High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r state_text`, around `r states_subset$share_preschool_of3to5_coi` percent of children of immigrants ages 3 to 5 were enrolled in preschool in 2017--18, compared with `r states_subset$share_preschool_of3to5_nat` percent of 3-to-5-year-olds with only US-born parents. \footnote{$^{1}$Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
+High-quality **early education** \href{https://www.brookings.edu/research/puzzling-it-out-the-current-state-of-scientific-knowledge-on-pre-kindergarten-effects/}{supports children's development}. In `r state_text`, around `r states_subset$share_preschool_of3to5_coi` percent of children of immigrants ages 3 to 5 were enrolled in preschool in 2017--18, compared with `r states_subset$share_preschool_of3to5_nat` percent of 3-to-5-year-olds with only US-born parents. \footnote{\textsuperscript{1}Severely burdened households spend 50 percent or more of their incomes on housing and utilities, somewhat-burdened households spend 30 to 49 percent of their incomes on these costs, and not-burdened households spend 29 percent or less.}
 
 \vspace{-0.025in}
 \textbf{Children of immigrants are and will continue to be part of the state's future and the nation's. Understanding their diversity and supporting immigrant families can help ensure our collective prosperity.}

@@ -8,7 +8,8 @@ library(readxl)
 filepath <- here::here("/data/factsheet_who are-support_data_states_201718_varnames.xlsx")
 index <- read_excel(filepath) %>% 
   select(statecode, StateName) %>%
-  mutate(StateName = ifelse(StateName == "Rhode island","Rhode Island",StateName))
+  mutate(StateName = ifelse(StateName == "Rhode island","Rhode Island",StateName)) %>%
+  filter(StateName != "United States")
 
 # create a data frame with parameters and output file names
 runs <- tibble(
