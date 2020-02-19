@@ -8,8 +8,8 @@ font:     Lato
 geometry: "left=1in,right=1in,top=0.35in,bottom=0.6in"
 urlcolor: #169d62
 params:
-  state: "District of Columbia"
-  state_abbrev: "DC"
+  state: "Massachusetts"
+  state_abbrev: "MA"
 editor_options: 
   chunk_output_type: console
   
@@ -338,7 +338,7 @@ ggsave(here("/figures/figure3.jpeg"),
                                              "2015–16",
                                              "2016–17"))) %>%
     ggplot(aes(year_2,share,color=par_status,group=par_status))+
-    geom_line(size=1.1) +
+    geom_line(size=0.65) +
     theme(panel.grid.major.y = element_blank(),
           legend.direction="vertical",
           axis.text.x = element_text(angle=45, 
