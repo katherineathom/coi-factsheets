@@ -77,11 +77,11 @@ states_subset <-read_excel(filepath) %>%
          
          temp_working_diff = share_workingfam_coi - share_workingfam_nat,
          
-         case_when(temp_working_diff <= -6 ~ "lower for children of immigrants than",
-                   temp_working_diff <= -3 ~ "slightly lower for children of immigrants than",
-                   temp_working_diff < 3   ~ "similar for children of immigrants and",
-                   temp_working_diff < 6   ~ "slightly higher for children of immigrants than",
-                   TRUE                    ~ "higher for children of immigrants than"), 
+         text_4_employment = case_when(temp_working_diff <= -6 ~ "lower for children of immigrants than",
+                                       temp_working_diff <= -3 ~ "slightly lower for children of immigrants than",
+                                       temp_working_diff < 3   ~ "similar for children of immigrants and",
+                                       temp_working_diff < 6   ~ "slightly higher for children of immigrants than",
+                                       TRUE                    ~ "higher for children of immigrants than"), 
          
          text_5_lowinc = case_when(temp_working_diff <= -3 | (share_above200povr_coi >- share_above200povr_nat) ~ "Around",
                                    temp_working_diff > -3                                                       ~ "Yet,"),
