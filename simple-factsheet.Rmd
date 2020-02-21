@@ -8,8 +8,8 @@ font:     Lato
 geometry: "left=1in,right=1in,top=0.35in,bottom=0.6in"
 urlcolor: #169d62
 params:
-  state: "Massachusetts"
-  state_abbrev: "MA"
+  state: "District of Columbia"
+  state_abbrev: "DC"
 editor_options: 
   
   chunk_output_type: console
@@ -34,6 +34,7 @@ library(here)
 library(scales)
 library(readxl)
 library(stringr)
+library(gridExtra)
 
 set_urbn_defaults(style = "print")
 ```
@@ -57,7 +58,7 @@ topercent <- function(x) {
 state_text <- if_else(params$state == "District of Columbia",
                      paste("the",params$state,sep=" "),
                      params$state)
-
+  
 states_subset <-data %>%
   filter(StateName == params$state) %>%
   rename_at(vars(contains("1718")),~sub("_1718", "", .)) %>%
@@ -183,15 +184,31 @@ race_subset <- states_subset %>%
     remove_axis() +
     coord_flip() 
   
-fig1 <- urbn_plot(get_legend(fig1),
-                  remove_legend(fig1),
-                  heights = c(0.6, 0.4))  
+  fig1_sheet <- urbn_plot(get_legend(fig1),
+                    remove_legend(fig1),
+                    heights = c(0.6,0.4))  
+
+  ggsave(here("/figures/figure1.jpeg"), 
+         plot = fig1_sheet, 
+         width = 3.5,
+         height = 1.5,
+         unit = "in")
   
-ggsave(here("/figures/figure1.jpeg"), 
-       plot = fig1, 
-       width = 3.5,
-       height = 1.5,
-       unit = "in")
+  # saving for external sharing
+  # generate title and add in urbn_plot with legend 
+  title <- paste(params$state,"Children, by Citizenship and Parental \nBirthplace, 2017–18",sep = " ")
+  fig1_ext <- urbn_plot(urbn_title(title),
+                        get_legend(fig1),
+                        remove_legend(fig1),
+                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau \nAmerican Community Survey public use microdata samples \n downloaded from IPUMS-USA"),
+                        heights = c(0.1,0.45,0.25,0.2))
+  # add on urban logo
+  fig1_ext <- grid.arrange(fig1_ext, urbn_logo_text(),ncol = 1, heights = c(30,1)) 
+  # set filename 
+  filename <- paste0("/figures/",params$state_abbrev,"_Figure1.jpeg")
+  # save 
+  ggsave(here(filename),
+         plot = fig1_ext)
   
 ## Creating Figure 2 
   
@@ -238,14 +255,26 @@ ggsave(here("/figures/figure1.jpeg"),
     remove_ticks() +
     remove_axis(axis="x",flip=TRUE)
   
-fig2 <- urbn_plot(get_legend(fig2),
+fig2_sheet <- urbn_plot(get_legend(fig2),
                   remove_legend(fig2),
                   heights = c(0.15, 0.85))
 
-ggsave(here("/figures/figure2.jpeg"), plot=fig2,
+ggsave(here("/figures/figure2.jpeg"), plot=fig2_sheet,
        width=3,
        height=3,
        unit="in")
+
+  # saving for external sharing
+  title <- paste("Family Work and Income Levels of", params$state, "Children, \n2017–18", sep = " ")
+  fig2_ext <- urbn_plot(urbn_title(title),
+                        get_legend(fig2),
+                        remove_legend(fig2),
+                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau \nAmerican Community Survey public use microdata samples \n downloaded from IPUMS-USA"),
+                        heights = c(0.1,0.1,0.7,0.1))
+  fig2_ext <- grid.arrange(fig2_ext, urbn_logo_text(),ncol = 1, heights = c(30,1)) 
+  filename <- paste0("/figures/",params$state_abbrev,"_Figure2.jpeg")
+  ggsave(here(filename),
+         plot = fig2_ext)
   
 ## Creating Figure 3 
   
@@ -292,15 +321,26 @@ ggsave(here("/figures/figure2.jpeg"), plot=fig2,
     remove_ticks() +
     remove_axis(axis="x",flip=TRUE)
   
-fig3 <- urbn_plot(get_legend(fig3),
+fig3_sheet <- urbn_plot(get_legend(fig3),
                   remove_legend(fig3),
                   heights = c(0.15, 0.85))
   
 ggsave(here("/figures/figure3.jpeg"),
-       plot = fig3, 
+       plot = fig3_sheet, 
        width = 3.5,
        height = 2.5,
        unit = "in")
+
+  title <- paste("Household Housing and Utility Cost Burden for", params$state, "\nChildren, 2017–18", sep = " ")
+  fig3_ext <- urbn_plot(urbn_title(title),
+                        get_legend(fig3),
+                        remove_legend(fig3),
+                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau \nAmerican Community Survey public use microdata samples \n downloaded from IPUMS-USA"),
+                        heights = c(0.1,0.1,0.7,0.1))
+  fig3_ext <- grid.arrange(fig3_ext, urbn_logo_text(),ncol = 1, heights = c(30,1)) 
+  filename <- paste0("/figures/",params$state_abbrev,"_Figure3.jpeg")
+  ggsave(here(filename),
+         plot = fig3_ext)
 
 
 ## Creating Figure 4 
@@ -353,12 +393,27 @@ ggsave(here("/figures/figure3.jpeg"),
   labs(x=NULL,
        y=NULL)
   
-fig4 <- urbn_plot(get_legend(fig4),
+fig4_sheet <- urbn_plot(get_legend(fig4),
                   remove_legend(fig4),
                   heights = c(0.20, 0.80))
 
-ggsave(here("/figures/figure4.jpeg"),plot=fig4,width=3,height=2.25,unit="in")
-  
+ggsave(here("/figures/figure4.jpeg"),
+       plot = fig4_sheet,
+       width = 3,
+       height = 2.25,
+       unit = "in")
+
+  title <- paste(params$state_abbrev, "Children Not Covered by Health Insurance", sep = " ")
+  fig4_ext <- urbn_plot(urbn_title(title),
+                        get_legend(fig4),
+                        remove_legend(fig4),
+                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau \nAmerican Community Survey public use microdata samples \n downloaded from IPUMS-USA"),
+                        heights = c(0.05,0.1,0.75,0.1))
+  fig4_ext <- grid.arrange(fig4_ext, urbn_logo_text(),ncol = 1, heights = c(30,1)) 
+  filename <- paste0("/figures/",params$state_abbrev,"_Figure4.jpeg")
+  ggsave(here(filename),
+         plot = fig4_ext)
+
 
 ```
 
