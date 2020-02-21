@@ -189,7 +189,7 @@ ggsave(here("/figures/figure1.jpeg"),
   fig1_ext <- urbn_plot(urbn_title("US Children, by Citizenship and Parental \nBirthplace, 2017–18"),
                         get_legend(fig1),
                         remove_legend(fig1),
-                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau \nAmerican Community Survey public use microdata samples \n downloaded from IPUMS-USA"),
+                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau American Community Survey public use microdata samples downloaded \nfrom IPUMS-USA."),
                         heights = c(0.1,0.45,0.25,0.2))
   fig1_ext <- grid.arrange(fig1_ext, urbn_logo_text(),ncol = 1, heights = c(30,1)) 
   ggsave(here("/figures/US_Figure1.jpeg"),
@@ -252,7 +252,7 @@ ggsave(here("/figures/figure2.jpeg"), plot=fig2_sheet,
   fig2_ext <- urbn_plot(urbn_title("Family Work and Income Levels of US Children, \n2017–18"),
                         get_legend(fig2),
                         remove_legend(fig2),
-                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau \nAmerican Community Survey public use microdata samples \n downloaded from IPUMS-USA"),
+                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau American Community Survey public use microdata samples downloaded \nfrom IPUMS-USA."),
                         heights = c(0.1,0.1,0.7,0.1))
   fig2_ext <- grid.arrange(fig2_ext, urbn_logo_text(),ncol = 1, heights = c(30,1)) 
   ggsave(here("/figures/US_Figure2.jpeg"),
@@ -316,7 +316,7 @@ ggsave(here("/figures/figure3.jpeg"),
   fig3_ext <- urbn_plot(urbn_title("Household Housing and Utility Cost Burden for US \nChildren, 2017–18"),
                         get_legend(fig3),
                         remove_legend(fig3),
-                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau \nAmerican Community Survey public use microdata samples \n downloaded from IPUMS-USA"),
+                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau American Community Survey public use microdata samples downloaded \nfrom IPUMS-USA."),
                         heights = c(0.1,0.1,0.7,0.1))
   fig3_ext <- grid.arrange(fig3_ext, urbn_logo_text(),ncol = 1, heights = c(30,1)) 
   ggsave(here("/figures/US_Figure3.jpeg"),
@@ -384,7 +384,7 @@ ggsave(here("/figures/figure4.jpeg"),plot = fig4_sheet,
   fig4_ext <- urbn_plot(urbn_title("US Children Not Covered by Health Insurance"),
                         get_legend(fig4),
                         remove_legend(fig4),
-                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau \nAmerican Community Survey public use microdata samples \n downloaded from IPUMS-USA"),
+                        urbn_source("Urban Institute analysis of 2005–18 US Census Bureau American Community Survey public use microdata samples downloaded \nfrom IPUMS-USA."),
                         heights = c(0.1,0.1,0.7,0.1))
   fig4_ext <- grid.arrange(fig4_ext, urbn_logo_text(),ncol = 1, heights = c(30,1)) 
   ggsave(here("/figures/US_Figure4.jpeg"),
