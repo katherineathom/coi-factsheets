@@ -37,8 +37,13 @@ vignettes/*.pdf
 
 *output/
 
+*.pdf
+
 # Data for fact sheets  
 data/
+
+# Figures - Image files
+figures/
 
 *.db
 
